@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registrazione - CFL Test</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container" style="max-width: 410px;">
+    <header>
+      <div class="logo" style="display: flex; align-items: center; justify-content: center;">
+        <img src="logo CFL.png" alt="Logo CFL" class="cfl-logo">
+      </div>
+    </header>
+    <main style="padding-top: 21px;">
+      <div class="card">
+        <h2 style="text-align:center;">Registrazione</h2>
+        <p class="description" style="text-align:center;">Compila il modulo per accedere ai test</p>
+        <form id="registrationForm">
+          <div class="form-group">
+            <label for="cognome">Cognome *</label>
+            <input type="text" id="cognome" name="cognome" required>
+          </div>
+          <div class="form-group">
+            <label for="nome">Nome *</label>
+            <input type="text" id="nome" name="nome" required>
+          </div>
+          <div class="form-group">
+            <label for="email">Email *</label>
+            <input type="email" id="email" name="email" required>
+          </div>
+          <div class="form-group">
+            <label for="telefono">Numero di Telefono *</label>
+            <input type="tel" id="telefono" name="telefono" placeholder="+39" required>
+          </div>
+          <div class="form-group checkbox-group">
+            <input type="checkbox" id="privacy" name="privacy" required>
+            <label for="privacy">Accetto la privacy policy *</label>
+          </div>
+          <button type="submit" class="btn btn-primary">REGISTRATI</button>
+        </form>
+        <div id="successMessage" class="success-message" style="display: none;">
+          <p>✓ Registrazione completata con successo!</p>
+          <button onclick="window.location.href='login.html'" class="btn btn-secondary">Accedi</button>
+        </div>
+        <div class="access-footer" style="margin-top:20px; text-align:center; font-size:15px;">
+          Sei già registrato? <a href="login.html">Accedi qui</a>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script>
+    // Blocco accesso se già loggato
+    if (localStorage.getItem('isRegistered') === 'true' && localStorage.getItem('userData')) {
+      window.location.href = 'test-selection.html';
+    }
+    // Submit del form registrazione
+    document.getElementById('registrationForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const formData = {
+        cognome: document.getElementById('cognome').value,
+        nome: document.getElementById('nome').value,
+        email: document.getElementById('email').value,
+        telefono: document.getElementById('telefono').value,
+        userId: 'user_' + Date.now()
+      };
+      localStorage.setItem('userData', JSON.stringify(formData));
+      localStorage.setItem('isRegistered', 'true');
+      await sendUserRegistration(formData);
+      document.getElementById('registrationForm').style.display = 'none';
+      document.getElementById('successMessage').style.display = 'block';
+    });
+    async function sendUserRegistration(userData) {
+      const url = "https://script.google.com/macros/s/AKfycbzvFOMzLJft5ndvsEipmZJWA9YAGNNaRhN08TE0jGFacND__bLsANleDgRzZwq7oF79gQ/exec";
+      try {
+        const resp = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(userData)
+        });
+        const json = await resp.json();
+        return json;
+      } catch (err) {
+        return null;
+      }
+    }
+  </script>
+</body>
+</html>
+
+
