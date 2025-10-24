@@ -269,7 +269,9 @@ async function signAndSubmit() {
 }
 
 async function sendTestDataToSheet(testResultData) {
-  const url = "https://script.google.com/macros/s/AKfycbzvFOMzLJft5ndvsEipmZJWA9YAGNNaRhN08TE0jGFacND__bLsANleDgRzZwq7oF79gQ/exec";
+  const url = "https://script.google.com/macros/s/AKfycbyyO2o4C8HQrHWoZJ-YNENmTCnn9kAycj6Nxv77dPcrJKTNF5ITsB3Dvakz8pi8AKV50g/exec"
+
+;
   try {
     const resp = await fetch(url, {
       method: "POST",
