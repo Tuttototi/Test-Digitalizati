@@ -10,7 +10,8 @@
   <div class="login-page">
     <img src="logo CFL.png" alt="Logo CFL" class="cfl-logo" style="margin-bottom:18px;">
     <h2 class="login-title" style="text-align:center;">Accedi all'Area Riservata</h2>
-    <form class="login-form">
+
+    <form id="loginForm" class="login-form">
       <div class="form-group">
         <label for="login-email">Email *</label>
         <input type="email" id="login-email" name="login-email" autocomplete="username" required>
@@ -20,36 +21,55 @@
         <input type="tel" id="login-telefono" name="login-telefono" autocomplete="tel" required>
       </div>
       <button type="submit" class="btn">Login</button>
-      <div class="login-error" style="display:none;"></div>
+      <div class="login-error" style="display:none; color:red; text-align:center; margin-top:10px;"></div>
     </form>
+
     <div class="access-footer" style="margin-top:20px; text-align:center; font-size:15px;">
       Non hai ancora un account? <a href="index.html">Registrati qui</a>
     </div>
   </div>
+
+  <!-- ====================== -->
+  <!-- SCRIPT CENTRALIZZATO -->
+  <!-- ====================== -->
+  <script src="script.js?v=5"></script>
   <script>
-    if(localStorage.getItem('isRegistered') === 'true' && localStorage.getItem('userData')){
-      window.location.href = 'test-selection.html';
-    }
-    document.querySelector('.login-form').addEventListener('submit', function(e){
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
       e.preventDefault();
-      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-      const email = document.getElementById('login-email').value.trim();
+
+      const email = document.getElementById('login-email').value.trim().toLowerCase();
       const telefono = document.getElementById('login-telefono').value.trim();
       const error = document.querySelector('.login-error');
-      if(!userData.email || !userData.telefono){
+      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+
+      if (!userData.email || !userData.telefono) {
         error.textContent = "Utente non trovato. Registrati prima!";
-        error.style.display = '';
+        error.style.display = 'block';
         return;
       }
-      if(userData.email === email && userData.telefono === telefono){
+
+      if (userData.email.toLowerCase() === email && userData.telefono === telefono) {
         error.style.display = 'none';
         localStorage.setItem('isRegistered', 'true');
+
+        // ✅ invia evento di login al foglio Google
+        try {
+          await sendLoginEvent(userData);
+          console.log("✅ Login registrato su Google Sheets");
+        } catch (err) {
+          console.warn("⚠️ Errore invio evento login:", err);
+        }
+
+        // ✅ vai alla pagina test
         window.location.href = 'test-selection.html';
       } else {
         error.textContent = "Email o telefono errati!";
-        error.style.display = '';
+        error.style.display = 'block';
       }
     });
   </script>
 </body>
 </html>
+
+
+

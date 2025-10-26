@@ -1,82 +1,118 @@
-// Check if user is authenticated
+// =======================================
+//  CFL TEST DIGITALIZATI – SCRIPT CENTRALE
+// =======================================
+
+// ✅ Controllo autenticazione
 function checkAuth() {
   if (localStorage.getItem("isRegistered") !== "true") {
     window.location.href = "index.html";
   }
 }
 
-// Format date in Italian
-function formatDate(date) {
-  return new Date(date).toLocaleDateString("it-IT", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-}
-
-// Get date for test (offset: -1 = ieri, 0 = oggi, 1 = domani)
+// ✅ Data in formato italiano (offset: -1 ieri, 0 oggi, +1 domani)
 function getTestDate(offset = 0) {
   const d = new Date();
   d.setDate(d.getDate() + offset);
-  return d.toLocaleDateString('it-IT');
+  return d.toLocaleDateString("it-IT");
 }
 
-// Save test results locally
-function saveTestResults(testName, score, total) {
-  const results = JSON.parse(localStorage.getItem("testResults") || "{}");
-  const userData = JSON.parse(localStorage.getItem("userData"));
-
-  results[testName] = {
-    score: score,
-    total: total,
-    percentage: Math.round((score / total) * 100),
-    date: new Date().toISOString(),
-    user: userData.nome + " " + userData.cognome,
-  };
-
-  localStorage.setItem("testResults", JSON.stringify(results));
-}
-
-// Genera un User ID univoco (oppure sostituisci con la tua funzione)
+// ✅ Genera ID utente univoco
 function generateUserId() {
-  return 'user_' + Math.random().toString(36).substr(2, 9);
+  return "user_" + Date.now();
 }
 
-// Invia i dati di registrazione utente al Google Sheet
+// ✅ URL del tuo script Google DEFINITIVO
+const GAS_URL = "https://script.google.com/macros/s/AKfycbyvwq5vFv6VUTG_Pu2C3FXDSNLqptL0dJKPjrmipYS9hwAOQkh4SdVgee961lAjem5ZLw/exec";
+
+// =======================
+//  INVII VERSO GOOGLE SHEETS (CENTRALIZZATI)
+// =======================
+
+// ✅ Invio registrazione
 async function sendUserRegistration(userData) {
-  const url = "https://script.google.com/macros/s/AKfycbzvFOMzLJft5ndvsEipmZJWA9YAGNNaRhN08TE0jGFacND__bLsANleDgRzZwq7oF79gQ/exec";
+  const payload = { action: "registrazione", ...userData };
+  return await sendToSheet(payload);
+}
+
+// ✅ Invio risultati test (test1/test2/test3)
+async function sendTestDataToSheet(testResultData) {
+  const payload = { action: "esito_test", ...testResultData };
+  return await sendToSheet(payload);
+}
+
+// ✅ Invio evento login
+async function sendLoginEvent(userData) {
+  const payload = { action: "login", ...userData, loginDate: new Date().toISOString() };
+  return await sendToSheet(payload);
+}
+
+// ✅ Funzione unica di comunicazione con Google Sheets (con fallback no-cors)
+async function sendToSheet(payload) {
   try {
-    const resp = await fetch(url, {
+    console.log("📤 Invio dati a Google Sheets...", payload);
+    const resp = await fetch(GAS_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(userData)
+      body: JSON.stringify(payload),
     });
     const json = await resp.json();
-    console.log("Registrazione inviata:", json);
+    console.log("✅ Risposta JSON:", json);
     return json;
   } catch (err) {
-    console.error("Errore invio utente:", err);
+    console.warn("⚠️ CORS bloccato, passo al fallback no-cors:", err);
+  }
+
+  try {
+    await fetch(GAS_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload),
+    });
+    console.log("✅ Inviato in modalità no-cors (risposta opaca)");
+    return { ok: true, opaque: true };
+  } catch (e2) {
+    console.error("❌ Invio fallito anche in no-cors:", e2);
     return null;
   }
 }
 
-// Funzione da chiamare DOPO la validazione e salvataggio del form di registrazione
+// =======================
+//  REGISTRAZIONE (index.html)
+// =======================
 function registerUser() {
   const userData = {
     userId: generateUserId(),
-    nome: document.getElementById("nome").value.trim(),
     cognome: document.getElementById("cognome").value.trim(),
+    nome: document.getElementById("nome").value.trim(),
     email: document.getElementById("email").value.trim(),
-    telefono: document.getElementById("telefono").value.trim()
+    telefono: document.getElementById("telefono").value.trim(),
+    registrationDate: new Date().toISOString(),
   };
 
   localStorage.setItem("userData", JSON.stringify(userData));
   localStorage.setItem("isRegistered", "true");
 
-  // Invio al tuo Google Apps Script
   sendUserRegistration(userData);
-
-  // Puoi poi fare redirect o mostrare conferma
   window.location.href = "test-selection.html";
 }
+
+// =======================
+//  ESPORTAZIONE SU WINDOW (MODIFICA COINVOLTA)
+//  Garantisce che le pagine che usano window.* (es. test1)
+//  vedano sempre queste funzioni senza duplicazioni locali.
+// =======================
+window.checkAuth = checkAuth;
+window.getTestDate = getTestDate;
+window.generateUserId = generateUserId;
+
+window.sendToSheet = sendToSheet;
+window.sendUserRegistration = sendUserRegistration;
+window.sendTestDataToSheet = sendTestDataToSheet;
+window.sendLoginEvent = sendLoginEvent;
+window.registerUser = registerUser;
+
+
+
+
 

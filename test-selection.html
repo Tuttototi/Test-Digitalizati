@@ -8,14 +8,12 @@
   </head>
   <body>
     <div class="container">
-<header>
-  <div class="logo" style="display: flex; align-items: center;">
-    <img src="logo CFL.png" alt="Logo CFL" class="cfl-logo">
-  </div>
-  <button onclick="window.location.href='test-selection.html'" class="btn-back btn-small">← Indietro</button>
-</header>
-
-
+      <header>
+        <div class="logo" style="display: flex; align-items: center;">
+          <img src="logo CFL.png" alt="Logo CFL" class="cfl-logo">
+        </div>
+        <button onclick="logout()" class="btn-exit">Esci</button>
+      </header>
 
       <main class="test-selection">
         <h2>Seleziona un Test</h2>
@@ -26,14 +24,9 @@
           <div class="test-card" id="card1">
             <div class="test-number">1</div>
             <h3>Test di Italiano</h3>
-            <p>
-              Test di comprensione della lingua italiana per la sicurezza sul
-              lavoro
-            </p>
+            <p>Test di comprensione della lingua italiana per la sicurezza sul lavoro</p>
             <p class="test-requirement">Massimo 3 errori consentiti</p>
-            <button onclick="startTest(1)" class="btn btn-primary" id="btn1">
-              Inizia Test
-            </button>
+            <button onclick="startTest(1)" class="btn btn-primary" id="btn1">Inizia Test</button>
             <div class="test-status" id="status1"></div>
           </div>
 
@@ -43,14 +36,7 @@
             <h3>Test di Sicurezza sul Lavoro</h3>
             <p>Corso di Formazione Generale dei Lavoratori (D.Lgs. 81/08)</p>
             <p class="test-requirement">Massimo 2 errori consentiti</p>
-            <button
-              onclick="startTest(2)"
-              class="btn btn-primary"
-              id="btn2"
-              disabled
-            >
-              🔒 Bloccato
-            </button>
+            <button onclick="startTest(2)" class="btn btn-primary" id="btn2" disabled>🔒 Bloccato</button>
             <div class="test-status" id="status2"></div>
           </div>
 
@@ -58,43 +44,32 @@
           <div class="test-card locked" id="card3">
             <div class="test-number">3</div>
             <h3>Sicurezza in Magazzino</h3>
-            <p>
-              Questionario di verifica dell'apprendimento - Norme di sicurezza
-              operativa
-            </p>
+            <p>Questionario di verifica dell'apprendimento - Norme di sicurezza operativa</p>
             <p class="test-requirement">Massimo 1 errore consentito</p>
-            <button
-              onclick="startTest(3)"
-              class="btn btn-primary"
-              id="btn3"
-              disabled
-            >
-              🔒 Bloccato
-            </button>
+            <button onclick="startTest(3)" class="btn btn-primary" id="btn3" disabled>🔒 Bloccato</button>
             <div class="test-status" id="status3"></div>
           </div>
         </div>
       </main>
     </div>
 
-    <script src="script.js"></script>
-    <script>
-      if (typeof checkAuth === "function") {
-        checkAuth();
-      }
+    <!-- Script centrale condiviso -->
+    <script src="script.js?v=5"></script>
 
+    <script>
+      // Protezione pagina: solo utenti registrati
+      if (typeof checkAuth === "function") checkAuth();
+
+      // Messaggio di benvenuto
       const userData = JSON.parse(localStorage.getItem("userData") || "{}");
       if (userData && userData.nome && userData.cognome) {
         document.getElementById("welcomeMessage").textContent =
           "Benvenuto/a " + userData.nome + " " + userData.cognome;
       }
 
+      // Carica e mostra stato di avanzamento test
       function loadTestProgress() {
-        const progress = JSON.parse(
-          localStorage.getItem("testProgress") || "{}"
-        );
-
-        console.log("Progress loaded:", progress);
+        const progress = JSON.parse(localStorage.getItem("testProgress") || "{}");
 
         // Test 1
         if (progress.test1 && progress.test1.passed) {
@@ -110,8 +85,7 @@
           } else if (progress.test2.attempts > 0) {
             document.getElementById("status2").innerHTML =
               '<span style="color: #f59e0b; font-weight: 600;">⚠ Da ripetere (' +
-              progress.test2.errors +
-              " errori)</span>";
+              (progress.test2.errors ?? 0) + " errori)</span>";
           }
         }
 
@@ -122,8 +96,7 @@
           } else if (progress.test3.attempts > 0) {
             document.getElementById("status3").innerHTML =
               '<span style="color: #f59e0b; font-weight: 600;">⚠ Da ripetere (' +
-              progress.test3.errors +
-              " errori)</span>";
+              (progress.test3.errors ?? 0) + " errori)</span>";
           }
         }
       }
@@ -133,20 +106,16 @@
         const btn = document.getElementById("btn" + testNum);
         const statusDiv = document.getElementById("status" + testNum);
 
-        // Rimuovi locked e aggiungi completed
         card.classList.remove("locked");
         card.classList.add("completed");
 
-        // Aggiorna pulsante
         btn.textContent = "✓ Completato";
         btn.disabled = false;
         btn.style.background = "#10b981";
 
-        // Mostra status
         statusDiv.innerHTML =
           '<span style="color: #10b981; font-weight: 600; font-size: 14px;">✓ Superato (' +
-          status.errors +
-          " errori)</span>";
+          (status.errors ?? 0) + " errori)</span>";
       }
 
       function unlockTest(testNum) {
@@ -170,8 +139,10 @@
         }
       }
 
-      // Carica progresso all'avvio
+      // Avvio
       loadTestProgress();
     </script>
   </body>
 </html>
+
+

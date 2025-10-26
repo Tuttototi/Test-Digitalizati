@@ -13,10 +13,12 @@
         <img src="logo CFL.png" alt="Logo CFL" class="cfl-logo">
       </div>
     </header>
+
     <main style="padding-top: 21px;">
       <div class="card">
         <h2 style="text-align:center;">Registrazione</h2>
         <p class="description" style="text-align:center;">Compila il modulo per accedere ai test</p>
+
         <form id="registrationForm">
           <div class="form-group">
             <label for="cognome">Cognome *</label>
@@ -38,56 +40,54 @@
             <input type="checkbox" id="privacy" name="privacy" required>
             <label for="privacy">Accetto la privacy policy *</label>
           </div>
+
           <button type="submit" class="btn btn-primary">REGISTRATI</button>
         </form>
+
         <div id="successMessage" class="success-message" style="display: none;">
           <p>✓ Registrazione completata con successo!</p>
           <button onclick="window.location.href='login.html'" class="btn btn-secondary">Accedi</button>
         </div>
+
         <div class="access-footer" style="margin-top:20px; text-align:center; font-size:15px;">
           Sei già registrato? <a href="login.html">Accedi qui</a>
         </div>
       </div>
     </main>
   </div>
+
+  <!-- ====================== -->
+  <!-- SCRIPT CENTRALIZZATO -->
+  <!-- ====================== -->
+  <script src="script.js?v=5"></script>
   <script>
-    // Blocco accesso se già loggato
-    if (localStorage.getItem('isRegistered') === 'true' && localStorage.getItem('userData')) {
-      window.location.href = 'test-selection.html';
-    }
-    // Submit del form registrazione
     document.getElementById('registrationForm').addEventListener('submit', async function(e) {
       e.preventDefault();
-      const formData = {
-        cognome: document.getElementById('cognome').value,
-        nome: document.getElementById('nome').value,
-        email: document.getElementById('email').value,
-        telefono: document.getElementById('telefono').value,
-        userId: 'user_' + Date.now()
+
+      const userData = {
+        userId: generateUserId(),
+        cognome: document.getElementById('cognome').value.trim(),
+        nome: document.getElementById('nome').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        telefono: document.getElementById('telefono').value.trim(),
+        registrationDate: new Date().toISOString()
       };
-      localStorage.setItem('userData', JSON.stringify(formData));
+
+      // salva localmente
+      localStorage.setItem('userData', JSON.stringify(userData));
       localStorage.setItem('isRegistered', 'true');
-      await sendUserRegistration(formData);
+
+      // invio a Google Sheets
+      const result = await sendUserRegistration(userData);
+      console.log('📤 Esito invio registrazione:', result);
+
+      // mostra messaggio
       document.getElementById('registrationForm').style.display = 'none';
       document.getElementById('successMessage').style.display = 'block';
     });
-    async function sendUserRegistration(userData) {
-      const url = "https://script.google.com/macros/s/AKfycbyyO2o4C8HQrHWoZJ-YNENmTCnn9kAycj6Nxv77dPcrJKTNF5ITsB3Dvakz8pi8AKV50g/exec"
-;
-      try {
-        const resp = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(userData)
-        });
-        const json = await resp.json();
-        return json;
-      } catch (err) {
-        return null;
-      }
-    }
   </script>
 </body>
 </html>
+
 
 

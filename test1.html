@@ -8,13 +8,12 @@
 </head>
 <body>
   <div class="container">
-  <header>
-  <div class="logo" style="display: flex; align-items: center;">
-    <img src="logo CFL.png" alt="Logo CFL" class="cfl-logo">
-  </div>
-  <button onclick="window.location.href='test-selection.html'" class="btn-back btn-small">← Indietro</button>
-</header>
-
+    <header>
+      <div class="logo" style="display: flex; align-items: center;">
+        <img src="logo CFL.png" alt="Logo CFL" class="cfl-logo">
+      </div>
+      <button onclick="window.location.href='test-selection.html'" class="btn-back btn-small">← Indietro</button>
+    </header>
 
     <main class="test-page">
       <div class="test-header">
@@ -58,33 +57,21 @@
     </main>
   </div>
 
+  <!-- ✅ usa funzioni centralizzate -->
+  <script src="script.js?v=5"></script>
+
   <script>
   // --- UTILITY ---
+  const MAX_ERR_1 = 3; // massimo errori consentiti nel Test 1
+
   function getTestDate(offset = 0) {
     const d = new Date();
     d.setDate(d.getDate() + offset);
     return d.toLocaleDateString('it-IT');
   }
 
-  // --- INVIO DATI ---
-  async function sendTestDataToSheet(testResultData) {
-    const url = "https://script.google.com/macros/s/AKfycbyyO2o4C8HQrHWoZJ-YNENmTCnn9kAycj6Nxv77dPcrJKTNF5ITsB3Dvakz8pi8AKV50g/exec"
-
-;
-    try {
-      const resp = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(testResultData)
-      });
-      const json = await resp.json();
-      console.log("Dati inviati:", json);
-      return json;
-    } catch (err) {
-      console.error("Errore invio a Google Sheet:", err);
-      return null;
-    }
-  }
+  // normalizza stringhe per confronto solido
+  function normalize(v){ return v == null ? "" : String(v).trim().toUpperCase(); }
 
   // --- SEZIONI DOMANDE ---
   const imageMatchingSection = {
@@ -92,93 +79,38 @@
     question: "Scegli la parola corretta per ogni figura:",
     type: "image-matching",
     images: [
-      { src: "immagini test 1/aprire.png", correct: "APRIRE", options: ["METTERE", "APRIRE", "SOLLEVARE"] },
-      { src: "immagini test 1/chiudere.png", correct: "CHIUDERE", options: ["CHIUDERE", "GIRARE", "SCAVARE"] },
-      { src: "immagini test 1/accendere.png", correct: "ACCENDERE", options: ["SPEGNERE", "ACCENDERE", "CADERE"] },
-      { src: "immagini test 1/spegnere.png", correct: "SPEGNERE", options: ["ACCENDERE", "SPEGNERE", "RACCOGLIERE"] },
+      { src: "immagini test 1/aprire.png",   correct: "APRIRE",    options: ["METTERE", "APRIRE", "SOLLEVARE"] },
+      { src: "immagini test 1/chiudere.png", correct: "CHIUDERE",  options: ["CHIUDERE", "GIRARE", "SCAVARE"] },
+      { src: "immagini test 1/accendere.png",correct: "ACCENDERE", options: ["SPEGNERE", "ACCENDERE", "CADERE"] },
+      { src: "immagini test 1/spegnere.png", correct: "SPEGNERE",  options: ["ACCENDERE", "SPEGNERE", "RACCOGLIERE"] },
       { src: "immagini test 1/raccogliere.png", correct: "RACCOGLIERE", options: ["CADERE", "METTERE", "RACCOGLIERE"] },
-      { src: "immagini test 1/mettere.png", correct: "METTERE", options: ["METTERE", "APRIRE", "GIRARE"] },
-      { src: "immagini test 1/scavare.png", correct: "SCAVARE", options: ["SOLLEVARE", "SCAVARE", "CHIUDERE"] },
-      { src: "immagini test 1/girare.png", correct: "GIRARE", options: ["GIRARE", "CADERE", "SPEGNERE"] },
-      { src: "immagini test 1/sollevare.png", correct: "SOLLEVARE", options: ["RACCOGLIERE", "SOLLEVARE", "ACCENDERE"] },
-      { src: "immagini test 1/cadere.png", correct: "CADERE", options: ["SCAVARE", "CADERE", "METTERE"] }
+      { src: "immagini test 1/mettere.png",  correct: "METTERE",   options: ["METTERE", "APRIRE", "GIRARE"] },
+      { src: "immagini test 1/scavare.png",  correct: "SCAVARE",   options: ["SOLLEVARE", "SCAVARE", "CHIUDERE"] },
+      { src: "immagini test 1/girare.png",   correct: "GIRARE",    options: ["GIRARE", "CADERE", "SPEGNERE"] },
+      { src: "immagini test 1/sollevare.png",correct: "SOLLEVARE", options: ["RACCOGLIERE", "SOLLEVARE", "ACCENDERE"] },
+      { src: "immagini test 1/cadere.png",   correct: "CADERE",    options: ["SCAVARE", "CADERE", "METTERE"] }
     ]
   };
 
-const section2Questions = [
-  {
-    section: "SEZIONE 2 - SEGNALI E ESPRESSIONI",
-    question: "A. Questo segnale vuol dire che:",
-    image: "immagini test 1/A- Questo segnale vuol dire che.jpg",
-    options: ["Nessuno può entrare", "Può entrare solo chi ha il permesso", "È pericoloso mettere le mani sulla macchina accesa"],
-    correct: 2
-  },
-  {
-    section: "SEZIONE 2",
-    question: "B. Questo segnale indica:",
-    image: "immagini test 1/B- Questo segnale indica.jpg",
-    options: ["Pericolo di fulmini", "Scendere giù", "Pericolo contatto elettrico"],
-    correct: 2
-  },
-  {
-    section: "SEZIONE 2",
-    question: "C. Questo segnale indica:",
-    image: "immagini test 1/C- Questo segnale indica.jpg",
-    options: ["Girare a sinistra", "Andare dritto", "Andare a destra"],
-    correct: 1
-  },
-  {
-    section: "SEZIONE 2",
-    question: "D. Questo segnale dice:",
-    image: "immagini test 1/D- Questo segnale dice.jpg",
-    options: ["Usare la mano destra", "C'è freddo", "Indossare i guanti di protezione"],
-    correct: 2
-  },
-  {
-    section: "SEZIONE 2",
-    question: "E. Questo segnale dice:",
-    image: "immagini test 1/E- Questo segnale dice.jpg",
-    options: ["Attento ai ponteggi", "Non devi camminare sotto materiali che si spostano in alto", "È vietato correre"],
-    correct: 1
-  },
-  {
-    section: "SEZIONE 2",
-    question: "F. MI RACCOMANDO vuol dire:",
-    options: ["Raccontami una storia", "Mi serve qualcosa", "Cerca di stare attento a quello che dico"],
-    correct: 2
-  },
-  {
-    section: "SEZIONE 2",
-    question: "G. È PERICOLOSO vuol dire:",
-    options: ["Puoi farti male", "È noioso", "Quel lavoro non serve"],
-    correct: 0
-  },
-  {
-    section: "SEZIONE 2",
-    question: "H. SPOSTATI vuol dire:",
-    options: ["Non devi stare lì", "Fai un altro lavoro", "Mettiti al posto di un altro"],
-    correct: 0
-  },
-  {
-    section: "SEZIONE 2",
-    question: "I. Se ti dicono STAI FERMO cosa fai?",
-    options: ["Vai via", "Non ti muovi", "Ti muovi"],
-    correct: 1
-  },
-  {
-    section: "SEZIONE 2",
-    question: "J. DAMMI UNA MANO vuol dire:",
-    options: ["Stai con me", "Aiutami", "Stringimi la mano"],
-    correct: 1
-  }
-];
-
+  // ⚠️ QUI LA CORREZIONE: tre chiavi 'correct' erano incoerenti con i cartelli
+  const section2Questions = [
+    { section: "SEZIONE 2 - SEGNALI E ESPRESSIONI", question: "A. Questo segnale vuol dire che:", image: "immagini test 1/A- Questo segnale vuol dire che.jpg", options: ["Nessuno può entrare", "Può entrare solo chi ha il permesso", "È pericoloso mettere le mani sulla macchina accesa"], correct: 1 },
+    { section: "SEZIONE 2", question: "B. Questo segnale indica:", image: "immagini test 1/B- Questo segnale indica.jpg", options: ["Pericolo di fulmini", "Scendere giù", "Pericolo contatto elettrico"], correct: 2 },
+    { section: "SEZIONE 2", question: "C. Questo segnale indica:", image: "immagini test 1/C- Questo segnale indica.jpg", options: ["Girare a sinistra", "Andare dritto", "Andare a destra"], correct: 0 },  // ← corretto
+    { section: "SEZIONE 2", question: "D. Questo segnale dice:", image: "immagini test 1/D- Questo segnale dice.jpg", options: ["Usare la mano destra", "C'è freddo", "Indossare i guanti di protezione"], correct: 2 },
+    { section: "SEZIONE 2", question: "E. Questo segnale dice:", image: "immagini test 1/E- Questo segnale dice.jpg", options: ["Attento ai ponteggi", "Non devi camminare sotto materiali che si spostano in alto", "È vietato correre"], correct: 1 },
+    { section: "SEZIONE 2", question: "F. MI RACCOMANDO vuol dire:", options: ["Raccontami una storia", "Mi serve qualcosa", "Cerca di stare attento a quello che dico"], correct: 2 },
+    { section: "SEZIONE 2", question: "G. È PERICOLOSO vuol dire:", options: ["Puoi farti male", "È noioso", "Quel lavoro non serve"], correct: 0 },
+    { section: "SEZIONE 2", question: "H. SPOSTATI vuol dire:", options: ["Non devi stare lì", "Fai un altro lavoro", "Mettiti al posto di un altro"], correct: 0 },
+    { section: "SEZIONE 2", question: "I. Se ti dicono STAI FERMO cosa fai?", options: ["Vai via", "Non ti muovi", "Ti muovi"], correct: 1 },
+    { section: "SEZIONE 2", question: "J. DAMMI UNA MANO vuol dire:", options: ["Stai con me", "Aiutami", "Stringimi la mano"], correct: 1 }
+  ];
 
   const textQuestions = [
     { question: "Mario fa colazione a casa", correct: true },
     { question: "Mario usa l'autobus per andare al lavoro", correct: true },
     { question: "Mario lavora in campagna", correct: false },
-    { question: "Mario fa il magazziniere", correct: true },
+    { question: "Mario fa il magazziniere", correct: false},
     { question: "La famiglia di Mario è formata da tre persone", correct: false },
     { question: "La casa di Mario è in montagna", correct: false },
     { question: "Mario è disordinato", correct: false },
@@ -209,19 +141,13 @@ const section2Questions = [
       const wrongItems = JSON.parse(retryData);
       questionsToShow = wrongItems.map(item => {
         let original = allQuestions[item.index];
-        if(item.type === 'image-matching'){
-          return {
-            ...original,
-            images: item.subs.map(idx => original.images[idx])
-          }
+        if (item.type === 'image-matching') {
+          return { ...original, images: item.subs.map(idx => original.images[idx]) };
         }
-        if(item.type === 'text'){
-          return {
-            ...original,
-            subQuestions: item.subs.map(idx => original.subQuestions[idx])
-          }
+        if (item.type === 'text') {
+          return { ...original, subQuestions: item.subs.map(idx => original.subQuestions[idx]) };
         }
-        return original; // quiz semplice
+        return original;
       });
       localStorage.removeItem('test1_retry');
       document.querySelector('.test-header h2').textContent = 'Test di Italiano - Ripetizione';
@@ -283,21 +209,8 @@ const section2Questions = [
     updateButtons();
   }
 
-  function nextQuestion() {
-    saveAnswer();
-    if (currentQuestion < questionsToShow.length - 1) {
-      currentQuestion++;
-      displayQuestion();
-    }
-  }
-
-  function previousQuestion() {
-    saveAnswer();
-    if (currentQuestion > 0) {
-      currentQuestion--;
-      displayQuestion();
-    }
-  }
+  function nextQuestion() { saveAnswer(); if (currentQuestion < questionsToShow.length - 1) { currentQuestion++; displayQuestion(); } }
+  function previousQuestion() { saveAnswer(); if (currentQuestion > 0) { currentQuestion--; displayQuestion(); } }
 
   function saveAnswer() {
     const q = questionsToShow[currentQuestion];
@@ -335,19 +248,34 @@ const section2Questions = [
 
   function submitTest() {
     saveAnswer();
+
+    // blocco invio se manca anche una sola risposta (via array answers, non DOM)
+    for (let i=0;i<questionsToShow.length;i++){
+      const q=questionsToShow[i], a=answers[i];
+      if (q.type==='image-matching'){
+        if(!Array.isArray(a)||a.length!==q.images.length||a.some(v=>v==null)){ alert('⚠️ Compila tutte le risposte prima di inviare.'); return; }
+      } else if (q.type==='text'){
+        if(!Array.isArray(a)||a.length!==q.subQuestions.length||a.some(v=>v==null)){ alert('⚠️ Compila tutte le risposte prima di inviare.'); return; }
+      } else {
+        if(a==null||Number.isNaN(a)){ alert('⚠️ Compila tutte le risposte prima di inviare.'); return; }
+      }
+    }
+
     let errors = 0, total = 0, wrongItems = [];
     questionsToShow.forEach(function(q, i) {
+      const originalIndex = allQuestions.indexOf(q);
+
       if (q.type === 'image-matching') {
         const wrongSubs = [];
         q.images.forEach(function(img, j) {
           total++;
-          if (!answers[i] || answers[i][j] !== img.correct) {
+          if (!answers[i] || normalize(answers[i][j]) !== normalize(img.correct)) {
             errors++;
             wrongSubs.push(j);
           }
         });
-        if(wrongSubs.length){
-          wrongItems.push({index: allQuestions.findIndex(x=>x===q||x.type===q.type), type: "image-matching", subs: wrongSubs});
+        if (wrongSubs.length) {
+          wrongItems.push({index: originalIndex, type: "image-matching", subs: wrongSubs});
         }
       } else if (q.type === "text") {
         const wrongSubs = [];
@@ -359,30 +287,31 @@ const section2Questions = [
           }
         });
         if(wrongSubs.length){
-          wrongItems.push({index: allQuestions.findIndex(x=>x===q||x.type===q.type), type: "text", subs: wrongSubs});
+          wrongItems.push({index: originalIndex, type: "text", subs: wrongSubs});
         }
       } else {
         total++;
         if(answers[i] !== q.correct){
           errors++;
-          wrongItems.push({index: allQuestions.findIndex(x=>x===q), type: "quiz"});
+          wrongItems.push({index: originalIndex, type: "quiz"});
         }
       }
     });
+
     const correct = total - errors;
     const percentage = Math.round((correct / total) * 100);
-    const passed = errors <= 3;
+    const passed = errors <= MAX_ERR_1;
+
     const progress = JSON.parse(localStorage.getItem('testProgress') || '{}');
     progress.test1 = {
-      errors: errors,
-      correct: correct,
-      total: total,
-      percentage: percentage,
-      passed: passed,
+      errors, correct, total,
+      percentage,
+      passed,
       attempts: (progress.test1 && progress.test1.attempts || 0) + 1,
       date: new Date().toISOString()
     };
     localStorage.setItem('testProgress', JSON.stringify(progress));
+
     const userData = JSON.parse(localStorage.getItem('userData') || '{}');
     document.querySelector('.test-content').style.display = "none";
     document.querySelector('.test-header').style.display = "none";
@@ -391,21 +320,29 @@ const section2Questions = [
     document.getElementById('resultCognome').textContent = userData.cognome || "";
     document.getElementById('resultNome').textContent = userData.nome || "";
     document.getElementById('resultData').textContent = getTestDate(-1);
-    if(passed){
-      document.getElementById('resultDetails').innerHTML = '<p class="result-percentage">Punteggio: ' + percentage + '%</p><p class="result-status passed">✓ TEST SUPERATO</p><p class="error-count">Errori: ' + errors + '/3</p><p class="success-message">Ottimo lavoro! Firma per procedere.</p>';
-      document.getElementById('signatureArea').style.display = 'block';
-      document.getElementById('signAndContinueBtn').style.display = 'block';
-      initializeSignatureCanvas();
+
+    if (passed) {
+        document.getElementById('resultDetails').innerHTML =
+          '<p class="result-percentage">Punteggio: ' + percentage + '%</p>' +
+          '<p class="result-status passed">✓ TEST SUPERATO</p>' +
+          '<p class="error-count">Errori: ' + errors + '/' + MAX_ERR_1 + '</p>' +
+          '<p class="success-message">Ottimo lavoro! Firma per procedere.</p>';
+        document.getElementById('signatureArea').style.display = 'block';
+        document.getElementById('signAndContinueBtn').style.display = 'block';
+        initializeSignatureCanvas();
+
     } else {
-      document.getElementById('resultDetails').innerHTML = '<p class="result-percentage">Punteggio: ' + percentage + '%</p><p class="result-status failed">✗ TEST NON SUPERATO</p><p class="error-count">Errori: ' + errors + '/3</p><p class="retry-message">⚠️ Devi ripetere le domande sbagliate</p>';
+      document.getElementById('resultDetails').innerHTML =
+          '<p class="result-percentage">Punteggio: ' + percentage + '%</p>' +
+          '<p class="result-status failed">✗ TEST NON SUPERATO</p>' +
+          '<p class="error-count">Errori: ' + errors + '/' + MAX_ERR_1 + '</p>' +
+          '<p class="retry-message">⚠️ Devi ripetere le domande sbagliate</p>';
       document.getElementById('retryBtn').style.display = 'block';
       localStorage.setItem('test1_retry', JSON.stringify(wrongItems));
     }
   }
 
-  function retryWrongQuestions(){
-    window.location.reload();
-  }
+  function retryWrongQuestions(){ window.location.reload(); }
 
   function initializeSignatureCanvas(){
     canvas = document.getElementById('signatureCanvas');
@@ -415,11 +352,9 @@ const section2Questions = [
     ctx.lineWidth = 2;
     ctx.lineCap = "round";
     canvas.addEventListener('mousedown', function(e){
-      isDrawing = true;
-      hasSignature = true;
+      isDrawing = true; hasSignature = true;
       const rect = canvas.getBoundingClientRect();
-      ctx.beginPath();
-      ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+      ctx.beginPath(); ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
     });
     canvas.addEventListener('mousemove', function(e){
       if(!isDrawing) return;
@@ -433,10 +368,8 @@ const section2Questions = [
       e.preventDefault();
       const touch = e.touches[0];
       const rect = canvas.getBoundingClientRect();
-      isDrawing = true;
-      hasSignature = true;
-      ctx.beginPath();
-      ctx.moveTo(touch.clientX - rect.left, touch.clientY - rect.top);
+      isDrawing = true; hasSignature = true;
+      ctx.beginPath(); ctx.moveTo(touch.clientX - rect.left, touch.clientY - rect.top);
     });
     canvas.addEventListener('touchmove', function(e){
       e.preventDefault();
@@ -449,16 +382,11 @@ const section2Questions = [
     canvas.addEventListener('touchend', function(){ isDrawing = false; });
   }
 
-  function clearSignature(){
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    hasSignature = false;
-  }
+  function clearSignature(){ ctx.clearRect(0, 0, canvas.width, canvas.height); hasSignature = false; }
 
   async function signAndContinue() {
-    if(!hasSignature){
-      alert('⚠️ Per favore firma prima di continuare');
-      return;
-    }
+    if(!hasSignature){ alert('⚠️ Per favore firma prima di continuare'); return; }
+
     const progress = JSON.parse(localStorage.getItem('testProgress') || '{}');
     progress.test1.signature = canvas.toDataURL("image/png");
     localStorage.setItem('testProgress', JSON.stringify(progress));
@@ -475,13 +403,13 @@ const section2Questions = [
       nomeTest: "Test 1 - Italiano",
       score: data.correct,
       total: data.total,
-      percentage: data.percentage,
+      percentuale: data.percentage,
       stato: data.passed ? "Superato" : "Ripeti",
-      date: getTestDate(-1),
-      firma: signatureBase64,
+      data_test: getTestDate(-1),
+      firma: signatureBase64
     };
-    await sendTestDataToSheet(testResultData);
 
+    await window.sendTestDataToSheet(testResultData);
     window.location.href = "test-selection.html";
   }
 
@@ -490,6 +418,10 @@ const section2Questions = [
   </script>
 </body>
 </html>
+
+
+
+
 
 
 
