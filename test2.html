@@ -79,26 +79,17 @@
     },
     {
       question: "Le disposizioni di cui al D.Lgs. n. 81/08 si applicano in tutti i settori di attività, privati o pubblici, nei quali ci sono lavoratori subordinati o ad essi equiparati ed anche autonomi",
-      options: [
-        "Vero",
-        "Falso"
-      ],
+      options: ["Vero","Falso"],
       correct: 0
     },
     {
       question: "Il lavoratore deve prendersi cura della propria salute e sicurezza, conformemente alle istruzioni e formazioni fornitegli dal Datore di Lavoro",
-      options: [
-        "Vero",
-        "Falso"
-      ],
+      options: ["Vero","Falso"],
       correct: 0
     },
     {
       question: "Tra i doveri dei Lavoratori vi è quello di segnalare tempestivamente eventuali deficienze delle attrezzature di lavoro, dei mezzi di protezione collettivi ed individuali:",
-      options: [
-        "Vero",
-        "Falso"
-      ],
+      options: ["Vero","Falso"],
       correct: 0
     },
     {
@@ -111,16 +102,14 @@
       correct: 2
     },
     {
-  question: 'Cosa succede se premo questo pulsante situato a ridosso di un’attrezzatura di lavoro?<br><div style="display:flex; justify-content:center; align-items:center; width:100%;"><img src="immagini%20test%202/pulsante.jpg" alt="Pulsante di emergenza" style="max-width:150px; margin:10px 0; border:1px solid #ccc;"></div>',
-  options: [
-    "Viene attivata una sirena d’allarme",
-    "Viene interrotta l’alimentazione della macchina la quale si blocca immediatamente",
-    "Viene attivato il gruppo di continuità"
-  ],
-  correct: 1
-}
-
-,
+      question: 'Cosa succede se premo questo pulsante situato a ridosso di un’attrezzatura di lavoro?<br><div style="display:flex; justify-content:center; align-items:center; width:100%;"><img src="immagini%20test%202/pulsante.jpg" alt="Pulsante di emergenza" style="max-width:150px; margin:10px 0; border:1px solid #ccc;"></div>',
+      options: [
+        "Viene attivata una sirena d’allarme",
+        "Viene interrotta l’alimentazione della macchina la quale si blocca immediatamente",
+        "Viene attivato il gruppo di continuità"
+      ],
+      correct: 1
+    },
     {
       question: "I ripari, le protezioni ed i dispositivi di sicurezza di un’attrezzatura:",
       options: [
@@ -132,81 +121,140 @@
     }
   ];
 
-  let currentQuestion=0,answers=[],canvas,ctx,isDrawing=false,hasSignature=false;
+  // --- NOVITÀ: supporto ripetizione solo errori ---
+  let currentQuestion = 0;
+  let answers = [];
+  let questionsToShow = [];
+  let isRetry = false;
+
+  function initializeTest2(){
+    const retryData = localStorage.getItem('test2_retry');
+    if (retryData) {
+      // ci sono domande sbagliate da ripetere
+      const wrongIdx = JSON.parse(retryData);
+      questionsToShow = wrongIdx.map(i => questions[i]);
+      isRetry = true;
+      localStorage.removeItem('test2_retry');
+      document.querySelector('.test-header h2').textContent = 'Test 2 - Ripetizione';
+      document.querySelector('.test-info').textContent = 'Rispondi alle domande sbagliate';
+      document.getElementById('progressText').textContent = `Domanda 1 di ${questionsToShow.length}`;
+    } else {
+      questionsToShow = [...questions];
+    }
+    currentQuestion = 0;
+    answers = [];
+  }
+
+  // --- firma ---
+  let canvas, ctx, isDrawing=false, hasSignature=false;
 
   function displayQuestion(){
-    const q=questions[currentQuestion];
-    let html=`<div class="question-card"><h3>${q.question}</h3><div class="options">`;
+    const q = questionsToShow[currentQuestion];
+    let html = `<div class="question-card"><h3>${q.question}</h3><div class="options">`;
     q.options.forEach((opt,i)=>{
-      html+=`<label class="option-label"><input type="radio" name="q${currentQuestion}" value="${i}"><span class="option-text">${opt}</span></label>`;
+      html += `<label class="option-label"><input type="radio" name="q${currentQuestion}" value="${i}"><span class="option-text">${opt}</span></label>`;
     });
-    html+=`</div></div>`;
-    document.getElementById("questionContainer").innerHTML=html;
-    updateProgress();updateButtons();
+    html += `</div></div>`;
+    document.getElementById("questionContainer").innerHTML = html;
+    updateProgress(); updateButtons();
   }
 
   function saveAnswer(){
-    const sel=document.querySelector(`input[name="q${currentQuestion}"]:checked`);
-    answers[currentQuestion]=sel?parseInt(sel.value):null;
+    const sel = document.querySelector(`input[name="q${currentQuestion}"]:checked`);
+    answers[currentQuestion] = sel ? parseInt(sel.value) : null;
   }
 
-  function nextQuestion(){saveAnswer();if(currentQuestion<questions.length-1){currentQuestion++;displayQuestion();}}
-  function previousQuestion(){saveAnswer();if(currentQuestion>0){currentQuestion--;displayQuestion();}}
+  function nextQuestion(){ saveAnswer(); if(currentQuestion < questionsToShow.length - 1){ currentQuestion++; displayQuestion(); } }
+  function previousQuestion(){ saveAnswer(); if(currentQuestion > 0){ currentQuestion--; displayQuestion(); } }
+
   function updateProgress(){
-    const p=((currentQuestion+1)/questions.length)*100;
-    document.getElementById("progressBar").style.width=p+"%";
-    document.getElementById("progressText").textContent=`Domanda ${currentQuestion+1} di ${questions.length}`;
+    const p = ((currentQuestion + 1) / questionsToShow.length) * 100;
+    document.getElementById("progressBar").style.width = p + "%";
+    document.getElementById("progressText").textContent = `Domanda ${currentQuestion + 1} di ${questionsToShow.length}`;
   }
+
   function updateButtons(){
-    document.getElementById("prevBtn").style.display=currentQuestion>0?"inline-block":"none";
-    document.getElementById("nextBtn").style.display=currentQuestion<questions.length-1?"inline-block":"none";
-    document.getElementById("submitBtn").style.display=currentQuestion===questions.length-1?"inline-block":"none";
+    document.getElementById("prevBtn").style.display = currentQuestion > 0 ? "inline-block" : "none";
+    document.getElementById("nextBtn").style.display = currentQuestion < questionsToShow.length - 1 ? "inline-block" : "none";
+    document.getElementById("submitBtn").style.display = currentQuestion === questionsToShow.length - 1 ? "inline-block" : "none";
   }
 
   function submitTest(){
     saveAnswer();
-    for(let i=0;i<questions.length;i++){
-      if(answers[i]==null||Number.isNaN(answers[i])){alert("⚠️ Compila tutte le risposte prima di inviare.");return;}
+    for(let i=0;i<questionsToShow.length;i++){
+      if(answers[i]==null||Number.isNaN(answers[i])){
+        alert("⚠️ Compila tutte le risposte prima di inviare."); return;
+      }
     }
-    let errors=0,total=questions.length;
-    questions.forEach((q,i)=>{if(answers[i]!==q.correct)errors++;});
-    const correct=total-errors,percentage=Math.round((correct/total)*100);
-    const passed=errors<=MAX_ERR_2;
-    const progress=JSON.parse(localStorage.getItem("testProgress")||"{}");
-    progress.test2={errors,correct,total,percentage,passed,date:new Date().toISOString()};
-    localStorage.setItem("testProgress",JSON.stringify(progress));
-    const userData=JSON.parse(localStorage.getItem("userData")||"{}");
+
+    // calcolo errori sul set mostrato
+    let errors = 0, total = questionsToShow.length;
+    const wrongOriginalIdx = [];
+    questionsToShow.forEach((q,i)=>{
+      if(answers[i] !== q.correct){
+        errors++;
+        // salvo l'indice rispetto all'array completo 'questions'
+        wrongOriginalIdx.push(questions.indexOf(q));
+      }
+    });
+
+    const correct = total - errors;
+    const percentage = Math.round((correct/total)*100);
+    const passed = errors <= MAX_ERR_2;
+
+    // salvo progress complessivo
+    const progress = JSON.parse(localStorage.getItem("testProgress")||"{}");
+    progress.test2 = { errors, correct, total, percentage, passed, date: new Date().toISOString() };
+    localStorage.setItem("testProgress", JSON.stringify(progress));
+
+    const userData = JSON.parse(localStorage.getItem("userData")||"{}");
     document.querySelector(".test-content").style.display="none";
     document.querySelector(".test-header").style.display="none";
     document.getElementById("resultsContainer").style.display="block";
-    document.getElementById("scoreDisplay").textContent=`${correct}/${total}`;
-    document.getElementById("resultCognome").textContent=userData.cognome||"";
-    document.getElementById("resultNome").textContent=userData.nome||"";
-    document.getElementById("resultData").textContent=(new Date()).toLocaleDateString('it-IT');
+    document.getElementById("scoreDisplay").textContent = `${correct}/${total}`;
+    document.getElementById("resultCognome").textContent = userData.cognome || "";
+    document.getElementById("resultNome").textContent = userData.nome || "";
+    document.getElementById("resultData").textContent = (new Date()).toLocaleDateString('it-IT');
+
     if(passed){
-      document.getElementById("resultDetails").innerHTML=`<p class="result-percentage">Punteggio: ${percentage}%</p><p class="result-status passed">✓ TEST SUPERATO</p><p class="error-count">Errori: ${errors}/${MAX_ERR_2}</p><p class="success-message">Ottimo lavoro! Firma per procedere.</p>`;
+      // pulizia eventuale retry rimasto
+      localStorage.removeItem('test2_retry');
+      document.getElementById("resultDetails").innerHTML =
+        `<p class="result-percentage">Punteggio: ${percentage}%</p>
+         <p class="result-status passed">✓ TEST SUPERATO</p>
+         <p class="error-count">Errori: ${errors}/${MAX_ERR_2}</p>
+         <p class="success-message">Ottimo lavoro! Firma per procedere.</p>`;
       document.getElementById("signatureArea").style.display="block";
       document.getElementById("signAndContinueBtn").style.display="block";
       initializeSignatureCanvas();
-    }else{
-      document.getElementById("resultDetails").innerHTML=`<p class="result-percentage">Punteggio: ${percentage}%</p><p class="result-status failed">✗ TEST NON SUPERATO</p><p class="error-count">Errori: ${errors}/${MAX_ERR_2}</p><p class="retry-message">⚠️ Devi ripetere le domande sbagliate</p>`;
+    } else {
+      // salvo SOLO le domande sbagliate per la ripetizione
+      localStorage.setItem('test2_retry', JSON.stringify(wrongOriginalIdx));
+      document.getElementById("resultDetails").innerHTML =
+        `<p class="result-percentage">Punteggio: ${percentage}%</p>
+         <p class="result-status failed">✗ TEST NON SUPERATO</p>
+         <p class="error-count">Errori: ${errors}/${MAX_ERR_2}</p>
+         <p class="retry-message">⚠️ Devi ripetere le domande sbagliate</p>`;
       document.getElementById("retryBtn").style.display="block";
     }
   }
-  function retryWrongQuestions(){window.location.reload();}
+
+  function retryWrongQuestions(){ window.location.reload(); }
+
   function initializeSignatureCanvas(){
     canvas=document.getElementById("signatureCanvas");
     if(!canvas)return;
     ctx=canvas.getContext("2d");
     ctx.strokeStyle="#000";ctx.lineWidth=2;ctx.lineCap="round";
-    canvas.onmousedown=e=>{isDrawing=true;hasSignature=true;ctx.beginPath();ctx.moveTo(e.offsetX,e.offsetY);}
-    canvas.onmousemove=e=>{if(!isDrawing)return;ctx.lineTo(e.offsetX,e.offsetY);ctx.stroke();}
+    canvas.onmousedown=e=>{isDrawing=true;hasSignature=true;ctx.beginPath();ctx.moveTo(e.offsetX,e.offsetY);};
+    canvas.onmousemove=e=>{if(!isDrawing)return;ctx.lineTo(e.offsetX,e.offsetY);ctx.stroke();};
     canvas.onmouseup=()=>isDrawing=false;canvas.onmouseout=()=>isDrawing=false;
     canvas.addEventListener("touchstart",e=>{e.preventDefault();const t=e.touches[0];const r=canvas.getBoundingClientRect();isDrawing=true;hasSignature=true;ctx.beginPath();ctx.moveTo(t.clientX-r.left,t.clientY-r.top);});
     canvas.addEventListener("touchmove",e=>{e.preventDefault();if(!isDrawing)return;const t=e.touches[0];const r=canvas.getBoundingClientRect();ctx.lineTo(t.clientX-r.left,t.clientY-r.top);ctx.stroke();});
     canvas.addEventListener("touchend",()=>isDrawing=false);
   }
   function clearSignature(){ctx.clearRect(0,0,canvas.width,canvas.height);hasSignature=false;}
+
   async function signAndContinue(){
     if(!hasSignature){alert("⚠️ Per favore firma prima di continuare");return;}
     const progress=JSON.parse(localStorage.getItem("testProgress")||"{}");
@@ -224,10 +272,14 @@
     await window.sendTestDataToSheet(payload);
     window.location.href="test-selection.html";
   }
+
+  // avvio
+  initializeTest2();
   displayQuestion();
   </script>
 </body>
 </html>
+
 
 
 
