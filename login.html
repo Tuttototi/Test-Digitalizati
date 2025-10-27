@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Login - CFL Test</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="login-page">
@@ -14,14 +14,14 @@
     <form id="loginForm" class="login-form">
       <div class="form-group">
         <label for="login-email">Email *</label>
-        <input type="email" id="login-email" name="login-email" autocomplete="username" required>
+        <input type="email" id="login-email" name="login-email" autocomplete="username" required />
       </div>
       <div class="form-group">
         <label for="login-telefono">Telefono *</label>
-        <input type="tel" id="login-telefono" name="login-telefono" autocomplete="tel" required>
+        <input type="tel" id="login-telefono" name="login-telefono" autocomplete="tel" required />
       </div>
       <button type="submit" class="btn">Login</button>
-      <div class="login-error" style="display:none; color:red; text-align:center; margin-top:10px;"></div>
+      <div class="login-error" style="display:none; color:#c62828; text-align:center; margin-top:10px;"></div>
     </form>
 
     <div class="access-footer" style="margin-top:20px; text-align:center; font-size:15px;">
@@ -29,47 +29,104 @@
     </div>
   </div>
 
-  <!-- ====================== -->
-  <!-- SCRIPT CENTRALIZZATO -->
-  <!-- ====================== -->
-  <script src="script.js?v=5"></script>
+  <!-- script centrale (contiene GAS_URL, sendLoginEvent, ecc.) -->
+  <script src="script.js?v=7"></script>
+
   <script>
-    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+    // Timeout helper per fetch
+    function fetchWithTimeout(url, opts = {}, ms = 8000) {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), ms);
+      return fetch(url, { ...opts, signal: ctrl.signal })
+        .finally(() => clearTimeout(t));
+    }
+
+    // Normalizzazioni identiche al backend
+    function normEmail(v){ return (v||"").trim().toLowerCase(); }
+    function normPhone(v){ return (v||"").replace(/\D+/g, ""); }
+
+    const form = document.getElementById("loginForm");
+    const errorBox = document.querySelector(".login-error");
+
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      const email = document.getElementById('login-email').value.trim().toLowerCase();
-      const telefono = document.getElementById('login-telefono').value.trim();
-      const error = document.querySelector('.login-error');
-      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+      const email = normEmail(document.getElementById("login-email").value);
+      const telefono = normPhone(document.getElementById("login-telefono").value);
 
-      if (!userData.email || !userData.telefono) {
-        error.textContent = "Utente non trovato. Registrati prima!";
-        error.style.display = 'block';
-        return;
-      }
+      errorBox.style.display = "none";
+      errorBox.textContent = "";
 
-      if (userData.email.toLowerCase() === email && userData.telefono === telefono) {
-        error.style.display = 'none';
-        localStorage.setItem('isRegistered', 'true');
+      const btn = form.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      btn.textContent = "Verifica in corso…";
 
-        // ✅ invia evento di login al foglio Google
-        try {
-          await sendLoginEvent(userData);
-          console.log("✅ Login registrato su Google Sheets");
-        } catch (err) {
-          console.warn("⚠️ Errore invio evento login:", err);
+      try {
+        if (!window.GASURL) throw new Error("GASURL non definita");
+
+        // ✅ GET senza header personalizzati (niente preflight)
+        const url = `${window.GASURL}?action=login_check&email=${encodeURIComponent(email)}&telefono=${encodeURIComponent(telefono)}`;
+        const resp = await fetchWithTimeout(url, { method: "GET" }, 8000);
+
+        if (!resp.ok) {
+          throw new Error("Risposta non valida dal server (HTTP " + resp.status + ")");
         }
 
-        // ✅ vai alla pagina test
-        window.location.href = 'test-selection.html';
-      } else {
-        error.textContent = "Email o telefono errati!";
-        error.style.display = 'block';
+        // Proviamo JSON diretto; se il server restituisce testo non JSON, questo solleverà
+        let data;
+        try {
+          data = await resp.json();
+        } catch (e) {
+          // prova a leggere come testo per capire l'errore
+          const t = await resp.text();
+          console.error("Risposta non JSON:", t);
+          throw new Error("Risposta non JSON dal server");
+        }
+
+        console.log("🔍 login_check:", data);
+
+        if (data && data.ok && data.found && data.user) {
+          // Salvo utente
+          localStorage.setItem("userData", JSON.stringify(data.user));
+          localStorage.setItem("isRegistered", "true");
+
+          // Provo a loggare l'evento (non blocca la navigazione se fallisce)
+          try { await window.sendLoginEvent(data.user); } catch (e) { console.warn("Login event fallito:", e); }
+
+          // Reindirizzo
+          window.location.href = "test-selection.html";
+          return;
+        }
+
+        // Utente non trovato
+        if (data && data.ok && data.found === false) {
+          errorBox.textContent = "Utente non trovato su questo dispositivo. Registrati prima.";
+          errorBox.style.display = "block";
+          return;
+        }
+
+        // Altro errore lato server
+        errorBox.textContent = "Errore server: " + (data && data.error ? data.error : "risposta inattesa");
+        errorBox.style.display = "block";
+
+      } catch (err) {
+        console.error("Errore login:", err);
+        errorBox.textContent = "Errore di connessione o risposta non valida.";
+        errorBox.style.display = "block";
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Login";
       }
     });
   </script>
 </body>
 </html>
+
+
+
+
+
+
 
 
 

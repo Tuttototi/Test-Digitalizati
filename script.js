@@ -9,6 +9,16 @@ function checkAuth() {
   }
 }
 
+// ✅ Funzione di logout (NEW!)
+// Cancella i dati di sessione e torna alla pagina di login
+function logout() {
+  localStorage.removeItem("isRegistered");
+  localStorage.removeItem("userData");
+  localStorage.removeItem("idempotentHistory");
+  window.location.href = "login.html"; // oppure "index.html" in base alla UX
+}
+window.logout = logout;
+
 // ✅ Data in formato italiano (offset: -1 ieri, 0 oggi, +1 domani)
 function getTestDate(offset = 0) {
   const d = new Date();
@@ -45,6 +55,7 @@ function generateUserId(baseEmail) {
 
 // ✅ URL del tuo script Google DEFINITIVO
 const GAS_URL = "https://script.google.com/macros/s/AKfycbyvwq5vFv6VUTG_Pu2C3FXDSNLqptL0dJKPjrmipYS9hwAOQkh4SdVgee961lAjem5ZLw/exec";
+window.GASURL = GAS_URL; // <-- PUBBLICA SU window per l'uso anche nei JS inline
 
 // =======================
 //  Invii verso Google Sheets (centralizzati)
@@ -272,7 +283,9 @@ async function registerUser() {
 window.sendUserRegistration = sendUserRegistration;
 window.sendTestDataToSheet = sendTestDataToSheet;
 window.sendLoginEvent = sendLoginEvent;
-window.registerUser = registerUser; // nel caso 
+window.registerUser = registerUser;
+window.logout = logout; // <--- Esporta la funzione di logout
+
 
 
 
