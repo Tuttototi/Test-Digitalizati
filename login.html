@@ -59,7 +59,12 @@
         const data = await resp.json().catch(() => ({}));
         console.log("🔍 login_check:", data);
 
-        if (data && data.ok && data.found && data.user) {
+        if (
+          data && data.ok && data.found && data.user &&
+          data.user.email === email &&
+          data.user.telefono === telefono
+        ) {
+
           // ✅ Salvo localmente
           localStorage.setItem("userData", JSON.stringify(data.user));
           localStorage.setItem("isRegistered", "true");
@@ -95,6 +100,7 @@
   </script>
 </body>
 </html>
+
 
 
 
